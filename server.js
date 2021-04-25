@@ -14,7 +14,7 @@ app.listen(PORT, () => {
 })
 
 // Routes
-
+app.get('/', homePage)
 app.get('/location', locationHandler)
 app.get('/weather', weatherHandler)
 app.get('*', errorHandler)
@@ -45,6 +45,10 @@ function errorHandler (req,res) {
     responseText: 'Sorry, something went wrong'
   };
   res.status(500).send(errorMessage);
+}
+
+function homePage (req,res) {
+  res.send('You are in the home page');
 }
 
 // Constructors
