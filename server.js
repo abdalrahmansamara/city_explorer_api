@@ -5,7 +5,12 @@ const app = express();
 
 require('dotenv').config();
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+  'origin': '*',
+  'methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  'preflightContinue': false,
+  'optionsSuccessStatus': 204
+}));
 
 const PORT = process.env.PORT || 3000;
 
@@ -42,7 +47,7 @@ function weatherHandler (req,res) {
 function errorHandler (req,res) {
   let errorMessage = {
     status: 500,
-    responseText: 'Sorry, something went wrong'
+    responseText: 'Sorry, the Developer is too lazy to make this Page'
   };
   res.status(500).send(errorMessage);
 }
