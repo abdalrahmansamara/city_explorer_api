@@ -66,5 +66,5 @@ function Location (loc){
 }
 function Weather (weatherDat) {
   this.forecast = weatherDat.weather.description;
-  this.time = weatherDat.datetime;
+  this.time =new Date(weatherDat.datetime).toString().slice(0,15);
 }
