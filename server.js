@@ -31,7 +31,7 @@ app.get('*', errorHandler)
 function locationHandler (req,res) {
 
   let cityName = req.query.city;
-  let key = process.env.LOCATION_KEY;
+  let key = process.env.GEOCODE_API_KEY;
   let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`
   superagent.get(URL)
     .then(geoData =>{
@@ -44,8 +44,13 @@ function locationHandler (req,res) {
       res.send(error);
     })
 }
+
+
+
+
+
 function weatherHandler (req,res) {
-  let key = process.env.WEATHER_KEY
+  let key = process.env.WEATHER_API_KEY
   let lat = req.query.latitude;
   let lon = req.query.longitude;
   let URL = `https://api.weatherbit.io/v2.0/forecast/daily?key=${key}&lat=${lat}&lon=${lon}`
@@ -67,7 +72,7 @@ function weatherHandler (req,res) {
 // https://developer.nps.gov/api/v1/parks?parkCode=acad&api_key=lWJhbEQRk9oSM59jDYLwcpHLflgfWDcLP2qChlfo
 function parksHandler (req,res) {
   let city = req.query.search_query;
-  let key = process.env.PARK_KEY;
+  let key = process.env.PARKS_API_KEY;
   let URL = `https://developer.nps.gov/api/v1/parks?q=${city}&api_key=${key}`;
   superagent.get(URL)
     .then(parksData => {
