@@ -1,11 +1,11 @@
 'use strict'
 
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const pg = require('pg');
 let client = new pg.Client(process.env.DATABASE_URL)
 
-require('dotenv').config();
 const cors = require('cors');
 const superagent = require('superagent');
 app.use(cors({
@@ -24,7 +24,6 @@ app.get('/', homePage)
 app.get('/location', locationHandler)
 app.get('/weather', weatherHandler)
 app.get('/parks', parksHandler)
-app.get('/names',namesHandler)
 app.get('*', errorHandler)
 
 // Handler Functions
@@ -47,9 +46,9 @@ function locationHandler (req,res) {
           .then(geoData =>{
             let gData = geoData.body;
             let locationData = new Location(cityName,gData);
-            res.send(locationData)
+            // res.send(locationData)
             let sql = `INSERT INTO location5 VALUES ($1,$2,$3,$4) RETURNING *;`
-            let safeValues = [locationData.search_query, locationData.formatted_query,locationData.latitude.locationData.longitude]
+            let safeValues = [locationData.search_query, locationData.formatted_query,locationData.latitude,locationData.longitude]
             client.query(sql,safeValues)
               .then(data => {
                 res.send(data.rows)
@@ -119,16 +118,6 @@ function homePage (req,res) {
   res.send('You are in the home page');
 }
 
-function namesHandler (req,res) {
-  let firstName = req.query.firstName;
-  let lastName = req.query.lastName;
-  let sql = `INSERT INTO people VALUES ($1,$2) RETURNING *;`
-  let safe = [firstName,lastName];
-  client.query(sql,safe)
-    .then(data => {
-      res.send(data);
-    })
-}
 
 
 

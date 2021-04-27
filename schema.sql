@@ -6,8 +6,3 @@ CREATE TABLE IF NOT EXISTS location5 (
     latitude VARCHAR(255),
     longitude VARCHAR(255)
 );
-
-CREATE TABLE IF NOT EXISTS people (
-    firstName VARCHAR(255),
-    lastName VARCHAR(255)
-)
