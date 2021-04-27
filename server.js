@@ -2,6 +2,8 @@
 
 const express = require('express');
 const app = express();
+const pg = require('pg');
+let client = new pg.Client(process.env.DATABASE_URL)
 
 require('dotenv').config();
 const cors = require('cors');
@@ -15,15 +17,14 @@ app.use(cors({
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`you are listening to PORT ${PORT}`)
-})
+
 
 // Routes
 app.get('/', homePage)
 app.get('/location', locationHandler)
 app.get('/weather', weatherHandler)
 app.get('/parks', parksHandler)
+app.get('/names',namesHandler)
 app.get('*', errorHandler)
 
 // Handler Functions
@@ -31,20 +32,39 @@ app.get('*', errorHandler)
 function locationHandler (req,res) {
 
   let cityName = req.query.city;
-  let key = process.env.GEOCODE_API_KEY;
-  let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`
-  superagent.get(URL)
-    .then(geoData =>{
-      let gData = geoData.body;
-      let locationData = new Location(cityName,gData);
-      res.send(locationData)
-    })
-    .catch(error=>{
-      console.log(error);
-      res.send(error);
-    })
-}
 
+  let sql = `SELECT * FROM location5 WHERE search_query=$1;`
+  let safeValues = [cityName];
+  client.query(sql,safeValues)
+    .then(data => {
+      if(data.rows.length){
+        res.send(data.rows[0]);
+      }
+      else {
+        let key = process.env.GEOCODE_API_KEY;
+        let URL = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${cityName}&format=json`
+        superagent.get(URL)
+          .then(geoData =>{
+            let gData = geoData.body;
+            let locationData = new Location(cityName,gData);
+            res.send(locationData)
+            let sql = `INSERT INTO location5 VALUES ($1,$2,$3,$4) RETURNING *;`
+            let safeValues = [locationData.search_query, locationData.formatted_query,locationData.latitude.locationData.longitude]
+            client.query(sql,safeValues)
+              .then(data => {
+                res.send(data.rows)
+              })
+          })
+          .catch(error=>{
+            console.log(error);
+            res.send(error);
+          })
+      }
+    })
+
+
+
+}
 
 
 
@@ -99,6 +119,19 @@ function homePage (req,res) {
   res.send('You are in the home page');
 }
 
+function namesHandler (req,res) {
+  let firstName = req.query.firstName;
+  let lastName = req.query.lastName;
+  let sql = `INSERT INTO people VALUES ($1,$2) RETURNING *;`
+  let safe = [firstName,lastName];
+  client.query(sql,safe)
+    .then(data => {
+      res.send(data);
+    })
+}
+
+
+
 // Constructors
 
 function Location (city,locData){
@@ -118,3 +151,10 @@ function Park (parkData, address) {
   this.description = parkData.description;
   this.url = parkData.url;
 }
+
+
+client.connect()
+  .then(
+    app.listen(PORT, () => {
+      console.log(`you are listening to PORT ${PORT}`)
+    }))
