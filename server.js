@@ -3,18 +3,11 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
-const pg = require('pg');
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL/*, ssl: { rejectUnauthorized: false } */});
-
 const cors = require('cors');
+app.use(cors());
 const superagent = require('superagent');
-app.use(cors({
-  'origin': '*',
-  'methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  'preflightContinue': false,
-  'optionsSuccessStatus': 204
-}));
-
+const pg = require('pg');
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false }});
 const PORT = process.env.PORT || 3000;
 
 
@@ -27,6 +20,7 @@ app.get('/parks', parksHandler)
 app.get('/movies', moviesHandler)
 app.get('/yelp', yelpHandler)
 app.get('*', errorHandler)
+
 
 // Handler Functions
 
@@ -50,7 +44,6 @@ function locationHandler (req,res) {
           .then(geoData =>{
             let gData = geoData.body;
             let locationData = new Location(cityName,gData);
-            // res.send(locationData)
             let sql = `INSERT INTO location5 VALUES ($1,$2,$3,$4) RETURNING *;`
             let safeValues = [locationData.search_query, locationData.formatted_query,locationData.latitude,locationData.longitude]
             client.query(sql,safeValues)
@@ -64,11 +57,7 @@ function locationHandler (req,res) {
           })
       }
     })
-
-
-
 }
-
 
 
 
@@ -92,7 +81,8 @@ function weatherHandler (req,res) {
     })
 }
 
-// https://developer.nps.gov/api/v1/parks?parkCode=acad&api_key=lWJhbEQRk9oSM59jDYLwcpHLflgfWDcLP2qChlfo
+
+
 function parksHandler (req,res) {
   let city = req.query.search_query;
   let key = process.env.PARKS_API_KEY;
@@ -108,6 +98,8 @@ function parksHandler (req,res) {
       res.send(results)
     })
 }
+
+
 
 function yelpHandler (req,res) {
   let search_query = req.query.search_query;
@@ -129,6 +121,8 @@ function yelpHandler (req,res) {
     })
 }
 
+
+
 function moviesHandler (req,res) {
   let moviesArray = [];
   let search_query = req.query.search_query;
@@ -144,6 +138,8 @@ function moviesHandler (req,res) {
     })
 }
 
+
+
 function errorHandler (req,res) {
   let errorMessage = {
     status: 500,
@@ -152,11 +148,11 @@ function errorHandler (req,res) {
   res.status(500).send(errorMessage);
 }
 
+
+
 function homePage (req,res) {
   res.send('You are in the home page');
 }
-
-
 
 
 // Constructors
@@ -167,10 +163,12 @@ function Location (city,locData){
   this.latitude = locData[0].lat;
   this.longitude = locData[0].lon;
 }
+
 function Weather (weatherDat) {
   this.forecast = weatherDat.weather.description;
   this.time =new Date(weatherDat.datetime).toString().slice(0,15);
 }
+
 function Park (parkData, address) {
   this.name = parkData.fullName;
   this.address = `${address.line1}, ${address.city}, ${address.stateCode} ${address.postalCode}`;
@@ -178,6 +176,7 @@ function Park (parkData, address) {
   this.description = parkData.description;
   this.url = parkData.url;
 }
+
 function Yelp (data){
   this.name = data.name;
   this.image_url = data.image_url;
@@ -191,7 +190,7 @@ function Movie (data) {
   this.overview = data.overview;
   this.average_votes = data.vote_average;
   this.total_votes = data.vote_count;
-  this.image_url = data.poster_path;
+  this.image_url = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
   this.popularity = data.popularity;
   this.released_on = data.release_date;
 }
